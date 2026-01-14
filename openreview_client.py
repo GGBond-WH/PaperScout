@@ -178,6 +178,46 @@ def fetch_submissions_with_reviews(venue_id: str) -> Tuple[List[Dict[str, Any]],
                 except Exception:
                     continue
         
+        
+        # --- V1 API Fallback for legacy conferences (e.g. ICLR 2023) ---
+        if not notes:
+            print(f"No notes found on V2 for {venue_id}. Trying V1 API...")
+            try:
+                # Initialize V1 client fallback
+                try:
+                    v1_client = openreview.Client(baseurl='https://api.openreview.net')
+                except AttributeError:
+                    import openreview as opr
+                    v1_client = opr.Client(baseurl='https://api.openreview.net')
+
+                # Try patterns on V1
+                v1_patterns = [
+                    f"{venue_id}/-/Submission",
+                    f"{venue_id}/-/Blind_Submission",
+                    f"{venue_id}/-/Paper"
+                ]
+                
+                for p in v1_patterns:
+                    try:
+                        # Use tools to iterate all notes if available
+                        if hasattr(openreview, 'tools') and hasattr(openreview.tools, 'iterget_notes'):
+                            print(f"Using iterget_notes for {p}")
+                            iterator = openreview.tools.iterget_notes(v1_client, invitation=p, details='replies')
+                            notes = list(iterator)
+                        else:
+                            # Simple fetch
+                            print(f"Using get_notes for {p}")
+                            notes = v1_client.get_notes(invitation=p, limit=3000, details='replies')
+                            
+                        if notes:
+                            print(f"Found {len(notes)} notes on V1 with {p}")
+                            break
+                    except Exception as e:
+                        # print(f"V1 attempt failed for {p}: {e}")
+                        continue
+            except Exception as e:
+                print(f"V1 Fallback failed: {e}")
+
         for note in notes:
             content = note.content if hasattr(note, 'content') else {}
             
