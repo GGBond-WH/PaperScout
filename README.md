@@ -37,7 +37,7 @@
 
 1. **克隆或下载项目**
    ```bash
-   cd /path/to/openreview论文获取脚本
+   cd PaperScout
    ```
 
 2. **安装依赖**
