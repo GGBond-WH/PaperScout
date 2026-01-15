@@ -38,8 +38,10 @@
 1. **克隆或下载项目**
    ```bash
    cd PaperScout
+   conda create -n paperscout python=3.9
+   conda activate paperscout
    ```
-
+   
 2. **安装依赖**
    ```bash
    pip install -r requirements.txt
